@@ -13,8 +13,8 @@ public class NameGenerator {
     private ArrayList<String> firstNames;
     private ArrayList<String> lastNames;
 
-    NameGenerator(String filePathStr) {
-        this.allNames = readNameFile(filePathStr);
+    NameGenerator(String filePath) {
+        this.allNames = readNameFile(filePath);
         this.firstNames = getNamesOfType("first");
         this.lastNames = getNamesOfType("last");
     }

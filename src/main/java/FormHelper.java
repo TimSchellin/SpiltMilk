@@ -7,35 +7,31 @@ import java.util.Random;
 
 public class FormHelper {
 
-    private Random randGenerator;
+    private int popSize;
+    private Random getRandom;
     private NameGenerator namer;
 
+    private ArrayList<String> names;
     private ArrayList<String> domains;
     private ArrayList<String> comments;
 
-    private static String namesFilePath = "C:\\Users\\Tim-Laptop\\IdeaProjects\\CamelKiller\\names.txt";
-    private static String domainsFilePath = "C:\\Users\\Tim-Laptop\\IdeaProjects\\CamelKiller\\domains.txt";
-    private static String CommentsFilePath = "";
-
-    private int popSize;
+    private static String namesFilePath = "names.txt";
+    private static String domainsFilePath = "domains.txt";
+    private static String CommentsFilePath = "comments.txt";
 
     private String fullName;
     private String firstName;
     private String emailAddress;
     private String comment;
 
-    FormHelper(boolean generateComments, int popSize){
-        this.randGenerator = new Random();
-        this.namer = new NameGenerator(namesFilePath);
-        this.domains = fileHandler(domainsFilePath, ",");
+    FormHelper(int popSize, boolean generateComments){
         this.popSize = popSize;
+        this.getRandom = new Random();
+        this.namer = new NameGenerator(namesFilePath);
+        this.domains = fileParser(domainsFilePath, ",");
 
-        generateNames();
-        generateEmails();
-
-        if(generateComments){
-            this.comments =
-        }
+        populateNames();
+        if(generateComments) populateComments();
     }
 
     public String getEmail() {
@@ -60,7 +56,7 @@ public class FormHelper {
 
     private void createNewPerson(){
         createName();
-        createEmailAddress();
+        createEmail();
         createComment();
     }
 
@@ -69,38 +65,56 @@ public class FormHelper {
         this.fullName = namer.getFullName(this.firstName);
     }
 
-    private void createEmailAddress() {
-        int randInt = randGenerator.nextInt((99 - 10) + 1) + 10;
-        this.emailAddress = this.firstName + randInt + createEmailSuffix();
+    private void createEmail() {
+        int randInt = getRandom.nextInt((99 - 10) + 1) + 10;
+        int index = getRandom.nextInt(domains.size());
+        String emailSuffix = "@" + domains.get(index) + ".com";
+        this.emailAddress = this.firstName + randInt + emailSuffix;
     }
 
-    private String createEmailSuffix() {
-        int index = randGenerator.nextInt(domains.size());
-        String email = "@" + domains.get(index) + ".com";
-        return null;
-    }
-
-    private void createComment(){
-        int index = randGenerator.nextInt(comments.size());
+    private void createComment() {
+        int index = getRandom.nextInt(comments.size());
         this.comment = comments.get(index);
     }
 
-    private void populateComments(){
-        // not created yet
+    private void populateNames() {
+        ArrayList<String> fullNames = new ArrayList<String>();
+        for (int i = 0; i < this.popSize; i++) {
+            this.names.add(getFullName());
+        }
     }
 
-    private static ArrayList<String> fileHandler(String filePath, String delimiter) {
-        String[] nameArray = null;
+    private void populateComments() {
+        // THIS LINE WILL NEED TO BE CHANGED
+        this.comments = fileParser(CommentsFilePath, ",");
+        //
+        ArrayList<String> auditList = fileParser("auditList.txt", ",");
+        filterComments(auditList);
+    }
+
+    private void filterComments(ArrayList <String> auditList) {
+        for( String badWord : auditList) {
+            for (String thisComment : this.comments) {
+                if(thisComment.contains(badWord)) {
+                    int index = this.comments.indexOf(thisComment);
+                    this.comments.remove(index);
+                }
+            }
+        }
+    }
+
+    private static ArrayList<String> fileParser(String filePath, String delimiter) {
+        String[] stringArray = null;
         try{
             BufferedReader br = new BufferedReader(new FileReader(filePath));
-            String names = br.readLine();
-            nameArray = names.split(delimiter);
+            String strings = br.readLine();
+            stringArray = strings.split(delimiter);
         } catch (FileNotFoundException noFile) {
             System.out.println("file not found!");
             noFile.printStackTrace();
         } catch (Exception e){
             e.printStackTrace();
         }
-        return new ArrayList<String>(Arrays.asList(nameArray));
+        return new ArrayList<String>(Arrays.asList(stringArray));
     }
 }

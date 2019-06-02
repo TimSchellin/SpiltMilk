@@ -1,5 +1,10 @@
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+
 import java.io.*;
-import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+//import org.openqa.selenium.WebDriver;
 
 public class Interface {
     public static String nameFile = "C:\\Users\\Tim-Laptop\\IdeaProjects\\CamelKiller\\names.txt";
@@ -7,15 +12,20 @@ public class Interface {
 
     public static void main(String args[]) {
         try {
-            //runFileCleaner(nameFile);
-            NameGenerator ng = new NameGenerator(nameFile);
-            ArrayList<String> names = ng.getFullNameList(400);
-            for (String name : names){
-                System.out.println(name);
-            }
+
+            System.out.println("main");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void runAutomation(){
+        System.setProperty("webdriver.chrome.driver", "C://chromedriver/chromedriver.exe");
+        WebDriver driver = new ChromeDriver();
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        
+
     }
 
     private static void runFileCleaner(String filePath){
