@@ -1,6 +1,10 @@
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -17,20 +21,23 @@ public class FormHelper {
 
     private static String namesFilePath = "names.txt";
     private static String domainsFilePath = "domains.txt";
-    private static String CommentsFilePath = "comments.txt";
+    private static String commentsFilePath = "comments_tz.csv";
+    private static String auditWordsFilePath = "auditWords.txt";
 
     private String fullName;
     private String firstName;
     private String emailAddress;
     private String comment;
 
-    FormHelper(int popSize, boolean generateComments){
+    FormHelper(int popSize, boolean generateComments) throws Exception {
         this.popSize = popSize;
         this.getRandom = new Random();
+        this.comments = new ArrayList<String>();
         this.namer = new NameGenerator(namesFilePath);
         this.domains = fileParser(domainsFilePath, ",");
 
-        populateNames();
+
+        //populateNames();
         if(generateComments) populateComments();
     }
 
@@ -54,7 +61,7 @@ public class FormHelper {
         return this.comment;
     }
 
-    private void createNewPerson(){
+    public void createNewPerson(){
         createName();
         createEmail();
         createComment();
@@ -77,27 +84,29 @@ public class FormHelper {
         this.comment = comments.get(index);
     }
 
-    private void populateNames() {
-        ArrayList<String> fullNames = new ArrayList<String>();
-        for (int i = 0; i < this.popSize; i++) {
-            this.names.add(getFullName());
+    private void populateComments() throws Exception {
+        Reader in = new FileReader("comments_tz.csv");
+        Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(in);
+        ArrayList<String> commentList = new ArrayList<String>();
+        for (CSVRecord record : records) {
+            commentList.add(record.get(4));
         }
+        filterComments(commentList);
     }
 
-    private void populateComments() {
-        // THIS LINE WILL NEED TO BE CHANGED
-        this.comments = fileParser(CommentsFilePath, ",");
-        //
-        ArrayList<String> auditList = fileParser("auditList.txt", ",");
-        filterComments(auditList);
-    }
-
-    private void filterComments(ArrayList <String> auditList) {
-        for( String badWord : auditList) {
-            for (String thisComment : this.comments) {
-                if(thisComment.contains(badWord)) {
-                    int index = this.comments.indexOf(thisComment);
-                    this.comments.remove(index);
+    private void filterComments(ArrayList <String> dirtyComments) {
+        ArrayList<String> auditWords = readContentFile(auditWordsFilePath);
+        for (String comment : dirtyComments){
+            if(comment.length() >= 1) {
+                boolean clean = true;
+                for (String badWord : auditWords) {
+                    if (comment.toLowerCase().contains(badWord)){
+                        clean = false;
+                    }
+                }
+                if(clean) {
+                    System.out.println(comment);
+                    this.comments.add(comment);
                 }
             }
         }
@@ -116,5 +125,20 @@ public class FormHelper {
             e.printStackTrace();
         }
         return new ArrayList<String>(Arrays.asList(stringArray));
+    }
+
+    private static ArrayList<String> readContentFile(String filePath) {
+        String[] nameArray = null;
+        try{
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+            String names = br.readLine();
+            nameArray = names.split(",");
+        } catch (FileNotFoundException noFile) {
+            System.out.println("name source file not found");
+            noFile.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<String>(Arrays.asList(nameArray));
     }
 }
